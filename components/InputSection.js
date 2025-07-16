@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -55,11 +56,14 @@ Meditation 3 minutes`
 };
 
 export default function InputSection({ onParseWorkout }) {
+  const navigation = useNavigation();
   const [workoutText, setWorkoutText] = useState('');
 
   const handleParseWorkout = () => {
     if (workoutText.trim()) {
       onParseWorkout(workoutText.trim());
+      // Navigate to timer page after parsing
+      navigation.jumpTo('Timer');
     }
   };
 
@@ -115,8 +119,8 @@ export default function InputSection({ onParseWorkout }) {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 20,
-    padding: 20,
+    borderRadius: 15,
+    padding: 15,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
   },
@@ -131,11 +135,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.3)',
     borderRadius: 10,
-    padding: 15,
+    padding: 10,
     color: 'white',
-    fontSize: 14,
+    fontSize: 20,
     fontFamily: 'monospace',
-    height: 200,
+    height: 300,
     textAlignVertical: 'top',
   },
   controls: {
@@ -156,10 +160,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   exampleSection: {
-    marginTop: 20,
+    marginTop: 10,
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderRadius: 10,
-    padding: 15,
+    padding: 10,
   },
   exampleTitle: {
     color: 'white',
