@@ -1,12 +1,33 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { formatTime } from '../utils/timeUtils';
 
 export default function WorkoutProgress({ workoutData, currentExerciseIndex }) {
+  const scrollViewRef = useRef(null);
+  const EXERCISE_HEIGHT = 76; // Approximate height of each exercise item + margin
+
+  // Auto-scroll when current exercise changes
+  useEffect(() => {
+    if (currentExerciseIndex >= 0 && currentExerciseIndex < workoutData.length) {
+      // Calculate the position to scroll to
+      const scrollToY = currentExerciseIndex * EXERCISE_HEIGHT;
+      
+      // Scroll to the current exercise with animation
+      scrollViewRef.current?.scrollTo({
+        y: scrollToY,
+        animated: true,
+      });
+    }
+  }, [currentExerciseIndex, workoutData.length]);
+
   if (!workoutData.length) return null;
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      ref={scrollViewRef}
+      style={styles.container} 
+      showsVerticalScrollIndicator={false}
+    >
       {workoutData.map((exercise, index) => {
         const isActive = index === currentExerciseIndex;
         const isCompleted = index < currentExerciseIndex;

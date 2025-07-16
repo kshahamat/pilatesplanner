@@ -35,7 +35,7 @@ export default function TimerSection({
     // This is the second-to-last exercise
     nextExerciseText = 'Push! You are almost done!';
   } else if (nextExercise) {
-    nextExerciseText = `Next: ${nextExercise.name}`;
+    nextExerciseText = `${nextExercise.name}`;
   } else {
     nextExerciseText = '';
   }
@@ -58,27 +58,14 @@ export default function TimerSection({
           totalTime={totalTime}
           isRest={currentExercise?.type === 'rest'}
           isFinished={isFinished}
+          isRunning={isRunning && !isPaused}
+          onPause={onPause}
+          onResume={onStart}
+          hasWorkout={workoutData.length > 0}
         />
       </View>
       
       <View style={styles.controls}>
-        <TouchableOpacity
-          style={[styles.button, (!workoutData.length || isRunning) && styles.buttonDisabled]}
-          onPress={onStart}
-          disabled={!workoutData.length || isRunning}
-        >
-          <Text style={styles.buttonText}>
-            {isPaused ? 'Resume' : 'Start'}
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={[styles.button, !isRunning && styles.buttonDisabled]}
-          onPress={onPause}
-          disabled={!isRunning}
-        >
-          <Text style={styles.buttonText}>Pause</Text>
-        </TouchableOpacity>
         
         <TouchableOpacity
           style={[styles.button, !isRunning && styles.buttonDisabled]}
@@ -110,7 +97,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 20,
     padding: 20,
-     marginBottom: 40, 
+    marginBottom: 30, 
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
   },
@@ -134,7 +121,7 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     minHeight: 60,
     marginTop: 20,
-    marginBottom: 20,
+    marginBottom: 15,
   },
   currentExercise: {
     fontSize: 40,
@@ -144,23 +131,21 @@ const styles = StyleSheet.create({
     color: 'white',
     textAlign: 'center',
     minHeight: 60,
-    marginTop: 20,
-    marginBottom: 90,
+    marginTop: 5,
+    marginBottom: 20,
   },
   controls: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
-    marginTop: 20,
     marginBottom: 20,
   },
   button: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    borderRadius: 25,
+    paddingVertical: 25,
+    borderRadius: 30,
     flex: 1,
-    minWidth: '45%',
+    minWidth: '48%',
   },
   buttonPause: {
     backgroundColor: 'rgba(220, 128, 29, 0.2)',
@@ -176,6 +161,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
+    fontSize: 25,
     textAlign: 'center',
   },
 });

@@ -1,6 +1,6 @@
 // screens/TemplatesScreen.js
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import WorkoutTemplates from '../components/WorkoutTemplates';
 import { useWorkout } from '../context/WorkoutContext';
@@ -8,19 +8,21 @@ import { useWorkout } from '../context/WorkoutContext';
 export default function TemplatesScreen() {
   const { handleSelectTemplate, currentWorkoutInput } = useWorkout();
 
+  const HeaderComponent = () => (
+    <Text style={styles.title}>Templates</Text>
+  );
+
   return (
     <LinearGradient
       colors={['#667eea', '#764ba2']}
       style={styles.container}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}> Templates</Text>
-        
-        <WorkoutTemplates
-          onSelectTemplate={handleSelectTemplate}
-          currentWorkoutInput={currentWorkoutInput}
-        />
-      </ScrollView>
+      <WorkoutTemplates
+        onSelectTemplate={handleSelectTemplate}
+        currentWorkoutInput={currentWorkoutInput}
+        HeaderComponent={HeaderComponent}
+        contentContainerStyle={styles.scrollContent}
+      />
     </LinearGradient>
   );
 }

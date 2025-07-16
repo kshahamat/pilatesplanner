@@ -13,7 +13,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const TEMPLATES_KEY = 'workout_templates';
 
-export default function WorkoutTemplates({ onSelectTemplate }) {
+export default function WorkoutTemplates({ 
+  onSelectTemplate, 
+  HeaderComponent, 
+  contentContainerStyle 
+}) {
   const [templates, setTemplates] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [templateName, setTemplateName] = useState('');
@@ -121,27 +125,38 @@ export default function WorkoutTemplates({ onSelectTemplate }) {
     </View>
   );
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Workout Templates</Text>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => setIsModalVisible(true)}
-        >
-          <Text style={styles.addButtonText}>+ Add Template</Text>
-        </TouchableOpacity>
+  // Custom header that combines the screen title with the component header
+  const renderHeader = () => (
+    <View>
+      {HeaderComponent && <HeaderComponent />}
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Workout Templates</Text>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => setIsModalVisible(true)}
+          >
+            <Text style={styles.addButtonText}>+ Add Template</Text>
+          </TouchableOpacity>
+        </View>
       </View>
+    </View>
+  );
 
+  return (
+    <View style={styles.fullContainer}>
       <FlatList
         data={templates}
         renderItem={renderTemplateItem}
         keyExtractor={(item) => item.id}
-        style={styles.templateList}
+        ListHeaderComponent={renderHeader}
+        contentContainerStyle={[styles.listContent, contentContainerStyle]}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>
-            No templates saved yet. Create your first template!
-          </Text>
+          <View style={styles.container}>
+            <Text style={styles.emptyText}>
+              No templates saved yet. Create your first template!
+            </Text>
+          </View>
         }
       />
 
@@ -191,8 +206,13 @@ export default function WorkoutTemplates({ onSelectTemplate }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  fullContainer: {
     flex: 1,
+  },
+  listContent: {
+    flexGrow: 1,
+  },
+  container: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 12,
     padding: 16,
@@ -219,15 +239,13 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '600',
   },
-  templateList: {
-    flex: 1,
-  },
   templateItem: {
     flexDirection: 'row',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     marginBottom: 8,
     borderRadius: 8,
     overflow: 'hidden',
+    marginHorizontal: 16,
   },
   templateContent: {
     flex: 1,

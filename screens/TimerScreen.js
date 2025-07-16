@@ -19,6 +19,9 @@ export default function TimerScreen() {
     resetWorkout,
   } = useWorkout();
 
+  // Check if workout is finished (no more exercises)
+  const isFinished = workoutData.length > 0 && currentExerciseIndex >= workoutData.length;
+
   return (
     <LinearGradient
       colors={['#667eea', '#764ba2']}
@@ -33,6 +36,7 @@ export default function TimerScreen() {
           totalTime={totalTime}
           isRunning={isRunning}
           isPaused={isPaused}
+          isFinished={isFinished}
           onStart={startWorkout}
           onPause={pauseWorkout}
           onSkip={skipExercise}

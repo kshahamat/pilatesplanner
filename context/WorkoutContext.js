@@ -104,7 +104,7 @@ export const WorkoutProvider = ({ children }) => {
 
   const startCurrentExercise = async (index) => {
     if (audioInitialized) {
-      await playBeep(600, 300);
+      await playBeep(1000, 300);
     }
     
     const exercise = workoutData[index];
@@ -137,7 +137,7 @@ export const WorkoutProvider = ({ children }) => {
         }
         
         if ((prev === 4 || prev === 3 || prev === 2) && audioInitialized) {
-          playBeep(800, 200);
+          playBeep(900, 200);
         }
         
         return prev - 1;
@@ -154,7 +154,7 @@ export const WorkoutProvider = ({ children }) => {
   }
   
   if (audioInitialized) {
-    await playBeep(800, 200);
+    await playBeep(1000, 200);
     setTimeout(() => playBeep(1000, 200), 300);
     setTimeout(() => playBeep(1200, 400), 600);
   }
