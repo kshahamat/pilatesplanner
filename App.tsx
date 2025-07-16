@@ -29,11 +29,11 @@ export default function App() {
               tabBarInactiveTintColor: 'gray',
               headerShown: false,
               tabBarStyle: {
-                backgroundColor: '#f8f8f8',
+                backgroundColor: '#d5c4f5ff',
                 borderTopWidth: 1,
-                borderTopColor: '#e0e0e0',
-                height: 60,
-                paddingBottom: 8,
+                borderTopColor: '#d5c4f5ff',
+                height: 70,
+                paddingBottom: 20,
                 paddingTop: 8,
               },
               tabBarLabelStyle: {

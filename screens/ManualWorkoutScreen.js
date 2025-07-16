@@ -14,7 +14,6 @@ export default function ManualWorkoutScreen() {
       style={styles.container}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>Write out your workout!</Text>
         
         {!audioInitialized && (
           <Text style={styles.audioStatus}>Initializing audio...</Text>
