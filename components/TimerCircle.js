@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     pointerEvents: 'none',
   },
   timeDisplay: {
-    fontSize: 32,
+    fontSize: 60,
     fontWeight: 'bold',
     color: 'white',
     textAlign: 'center',

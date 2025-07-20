@@ -22,10 +22,16 @@ export default function TimerSection({
   onPause,
   onSkip,
   onReset,
+  onRestartExercise,
+  onPreviousExercise, // New prop for going back to previous exercise
 }) {
   const currentExercise = workoutData[currentExerciseIndex];
   const nextExercise = workoutData[currentExerciseIndex+1];
   const isFinished = currentExerciseIndex >= workoutData.length && workoutData.length > 0;
+  
+  // Track double tap for back button
+  const lastBackTap = useRef(null);
+  const DOUBLE_TAP_DELAY = 500; // 500ms for double tap
   
   // Animation values for current exercise
   const nextExerciseY = useRef(new Animated.Value(0)).current;
@@ -114,6 +120,22 @@ export default function TimerSection({
       isAnimating.current = false;
     });
   };
+
+  const handleBackPress = () => {
+    const now = Date.now();
+    
+    if (lastBackTap.current && (now - lastBackTap.current) < DOUBLE_TAP_DELAY) {
+      // Double tap detected - go to previous exercise
+      if (onPreviousExercise) {
+        onPreviousExercise();
+      }
+      lastBackTap.current = null;
+    } else {
+      // Single tap - restart current exercise
+      lastBackTap.current = now;
+      onRestartExercise();
+    }
+  };
   
   let nextExerciseText;
   let animatingNextExerciseText;
@@ -124,13 +146,10 @@ export default function TimerSection({
   } else if (currentExerciseIndex === workoutData.length - 1) {
     nextExerciseText = 'THIS IS YOUR LAST ONE! FINISH STRONG';
     animatingNextExerciseText = 'YOU ARE DONE WOOT WOOT!';
-  } else if (currentExerciseIndex === workoutData.length - 2) {
-    nextExerciseText = 'Push! You are almost done!';
-    animatingNextExerciseText = 'THIS IS YOUR LAST ONE! FINISH STRONG';
   } else if (nextExercise) {
     nextExerciseText = `${nextExercise.name}`;
     // Get the exercise after next for animation
-    const exerciseAfterNext = workoutData[currentExerciseIndex + 2];
+    const exerciseAfterNext = workoutData[currentExerciseIndex + 1];
     if (exerciseAfterNext) {
       animatingNextExerciseText = `${exerciseAfterNext.name}`;
     } else if (currentExerciseIndex + 2 === workoutData.length - 1) {
@@ -233,29 +252,31 @@ export default function TimerSection({
           onResume={onStart}
           hasWorkout={workoutData.length > 0}
         />
-      </View>
-      
-      <View style={styles.controls}>
-        <TouchableOpacity
-          style={[styles.button, !isRunning && styles.buttonDisabled]}
-          onPress={onSkip}
-          disabled={!isRunning}
-        >
-          <Text style={styles.buttonText}>Skip</Text>
-        </TouchableOpacity>
         
-        <TouchableOpacity
-          style={[styles.button, !workoutData.length && styles.buttonDisabled]}
-          onPress={onReset}
-          disabled={!workoutData.length}
-        >
-          <Text style={styles.buttonText}>Reset</Text>
-        </TouchableOpacity>
+        {/* Controls positioned under the TimerCircle */}
+        <View style={styles.controls}>
+          <TouchableOpacity
+            style={[styles.button, !isRunning && styles.buttonDisabled]}
+            onPress={handleBackPress}
+            disabled={!isRunning}
+          >
+            <Text style={styles.buttonIcon}>⟪</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.button, !isRunning && styles.buttonDisabled]}
+            onPress={onSkip}
+            disabled={!isRunning}
+          >
+            <Text style={styles.buttonIcon}>⟫</Text>
+          </TouchableOpacity>
+        </View>
       </View>
       
       <WorkoutProgress
         workoutData={workoutData}
         currentExerciseIndex={currentExerciseIndex}
+        onReset={onReset} // Pass reset function to WorkoutProgress
       />
     </View>
   );
@@ -306,12 +327,12 @@ const styles = StyleSheet.create({
   },
   exerciseContainer: {
     position: 'relative',
-    height: 120, // Fixed height to contain both exercises
+    height: 160, // Fixed height to contain both exercises
     width: '80%',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10, // Reduced from 20
-    overflow: 'hidden', // Prevent text from showing outside bounds
+    // marginBottom: 10, // Reduced from 20
+    // overflow: 'hidden', // Prevent text from showing outside bounds
   },
   currentExerciseContainer: {
     position: 'absolute',
@@ -337,14 +358,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
-    marginBottom: 20,
+    marginTop: 0, // Added margin top to move buttons closer to timer circle
+    marginBottom: 0, // Reduced margin bottom
   },
   button: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
     paddingVertical: 25,
     borderRadius: 30,
     flex: 1,
     minWidth: '48%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   buttonPause: {
     backgroundColor: 'rgba(220, 128, 29, 0.2)',
@@ -355,12 +381,19 @@ const styles = StyleSheet.create({
     minWidth: '45%',
   },
   buttonDisabled: {
-    opacity: 0.5,
+    opacity: 0.3,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 25,
+    textAlign: 'center',
+  },
+  buttonIcon: {
+    color: 'white',
+    fontSize: 32,
+    fontWeight: '300',
     textAlign: 'center',
   },
 });

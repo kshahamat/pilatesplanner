@@ -17,6 +17,8 @@ export default function TimerScreen() {
     pauseWorkout,
     skipExercise,
     resetWorkout,
+    restartCurrentExercise,
+    previousExercise,
   } = useWorkout();
 
   // Check if workout is finished (no more exercises)
@@ -41,6 +43,8 @@ export default function TimerScreen() {
           onPause={pauseWorkout}
           onSkip={skipExercise}
           onReset={resetWorkout}
+          onRestartExercise={restartCurrentExercise}
+          onPreviousExercise={previousExercise}
         />
         
       </ScrollView>
@@ -53,8 +57,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingHorizontal: 5,
+    paddingVertical: 10,
   },
   title: {
     fontSize: 32,

@@ -8,20 +8,26 @@ import {
   TextInput,
   Alert,
   Modal,
+  ScrollView,
+  Dimensions,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const TEMPLATES_KEY = 'workout_templates';
+const { width } = Dimensions.get('window');
 
 export default function WorkoutTemplates({ 
   onSelectTemplate, 
   HeaderComponent, 
-  contentContainerStyle 
+  contentContainerStyle,
+  navigation
 }) {
   const [templates, setTemplates] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [templateName, setTemplateName] = useState('');
   const [templateContent, setTemplateContent] = useState('');
+  const [editingTemplate, setEditingTemplate] = useState(null);
+  const [deleteMode, setDeleteMode] = useState(false);
 
   // Load templates when component mounts
   useEffect(() => {
@@ -36,7 +42,6 @@ export default function WorkoutTemplates({
         setTemplates(JSON.parse(storedTemplates));
       }
     } catch (error) {
-      console.error('Error loading templates:', error);
       Alert.alert('Error', 'Failed to load workout templates');
     }
   };
@@ -47,32 +52,44 @@ export default function WorkoutTemplates({
       await AsyncStorage.setItem(TEMPLATES_KEY, JSON.stringify(updatedTemplates));
       setTemplates(updatedTemplates);
     } catch (error) {
-      console.error('Error saving templates:', error);
       Alert.alert('Error', 'Failed to save workout templates');
     }
   };
 
-  // Add new template
-  const addTemplate = async () => {
+  // Add or update template
+  const saveTemplate = async () => {
     if (!templateName.trim() || !templateContent.trim()) {
       Alert.alert('Error', 'Please enter both template name and content');
       return;
     }
 
-    const newTemplate = {
-      id: Date.now().toString(),
-      name: templateName.trim(),
-      content: templateContent.trim(),
-      createdAt: new Date().toISOString(),
-    };
+    let updatedTemplates;
+    
+    if (editingTemplate) {
+      // Update existing template
+      updatedTemplates = templates.map(t => 
+        t.id === editingTemplate.id 
+          ? { ...t, name: templateName.trim(), content: templateContent.trim() }
+          : t
+      );
+    } else {
+      // Add new template
+      const newTemplate = {
+        id: Date.now().toString(),
+        name: templateName.trim(),
+        content: templateContent.trim(),
+        createdAt: new Date().toISOString(),
+      };
+      updatedTemplates = [...templates, newTemplate];
+    }
 
-    const updatedTemplates = [...templates, newTemplate];
     await saveTemplates(updatedTemplates);
     
     setTemplateName('');
     setTemplateContent('');
+    setEditingTemplate(null);
     setIsModalVisible(false);
-    Alert.alert('Success', 'Template saved successfully!');
+    Alert.alert('Success', `Template ${editingTemplate ? 'updated' : 'saved'} successfully!`);
   };
 
   // Delete template
@@ -94,54 +111,151 @@ export default function WorkoutTemplates({
     );
   };
 
-  // Select template
-  const selectTemplate = (template) => {
-    onSelectTemplate(template.content);
-    Alert.alert('Template Loaded', `"${template.name}" has been loaded into the workout timer`);
+  // Handle long press to enter delete mode
+  const handleLongPress = () => {
+    setDeleteMode(true);
   };
 
-  // Render template item
-  const renderTemplateItem = ({ item }) => (
-    <View style={styles.templateItem}>
+  // Exit delete mode
+  const exitDeleteMode = () => {
+    setDeleteMode(false);
+  };
+
+  // Select template - only works when not in delete mode
+  const selectTemplate = (template) => {
+    if (deleteMode) {
+      return; // Don't select template in delete mode
+    }
+    
+    onSelectTemplate(template.content);
+    
+    try {
+      if (navigation) {
+        if (navigation.jumpTo) {
+          console.log('Using jumpTo...');
+          navigation.jumpTo('Timer');
+        } else if (navigation.navigate) {
+          console.log('Using navigate...');
+          navigation.navigate('Timer');
+        } else if (navigation.dispatch) {
+          console.log('Using dispatch with TabActions...');
+          const { TabActions } = require('@react-navigation/native');
+          navigation.dispatch(TabActions.jumpTo('Timer'));
+        } else {
+          throw new Error('No suitable navigation method found');
+        }
+      } else {
+        throw new Error('Navigation object not available');
+      }
+    } catch (error) {
+      console.error('Navigation failed:', error);
+      Alert.alert(
+        'Navigation Issue', 
+        'Template loaded successfully! Please manually switch to the Timer tab.',
+        [{ text: 'OK', style: 'default' }]
+      );
+    }
+  };
+
+  // Handle edit template - only works when not in delete mode
+  const handleEditTemplate = (template) => {
+    if (deleteMode) {
+      return; // Don't edit in delete mode
+    }
+    
+    setEditingTemplate(template);
+    setTemplateName(template.name);
+    setTemplateContent(template.content);
+    setIsModalVisible(true);
+  };
+
+  // Handle add new template
+  const handleAddTemplate = () => {
+    setEditingTemplate(null);
+    setTemplateName('');
+    setTemplateContent('');
+    setIsModalVisible(true);
+  };
+
+  // Render template item as a note card
+  const renderTemplateItem = ({ item, index }) => (
+    <View style={[
+      styles.noteCard, 
+      { width: (width - 60) / numColumns },
+      deleteMode && styles.noteCardWiggle
+    ]}>
       <TouchableOpacity
-        style={styles.templateContent}
+        style={styles.noteContent}
         onPress={() => selectTemplate(item)}
+        onLongPress={handleLongPress}
+        activeOpacity={deleteMode ? 1 : 0.7}
       >
-        <Text style={styles.templateName}>{item.name}</Text>
-        <Text style={styles.templatePreview} numberOfLines={2}>
+        {/* Title section */}
+        <View style={styles.noteHeader}>
+          <Text style={styles.noteTitle} numberOfLines={1}>
+            {item.name}
+          </Text>
+        </View>
+        
+        {/* Content preview */}
+        <Text style={styles.notePreview} numberOfLines={8}>
           {item.content}
         </Text>
-        <Text style={styles.templateDate}>
-          Created: {new Date(item.createdAt).toLocaleDateString()}
-        </Text>
+        
+        {/* Date at bottom */}
+        <View style={styles.noteFooter}>
+          <Text style={styles.noteDate}>
+            {new Date(item.createdAt).toLocaleDateString()}
+          </Text>
+        </View>
       </TouchableOpacity>
       
+      {/* Edit button - top left corner - always visible */}
       <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={() => deleteTemplate(item.id)}
+        style={styles.editButton}
+        onPress={() => handleEditTemplate(item)}
       >
-        <Text style={styles.deleteButtonText}>×</Text>
+        <Text style={styles.editButtonText}>✎</Text>
       </TouchableOpacity>
+      
+      {/* Delete button - top right corner - only visible in delete mode */}
+      {deleteMode && (
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => deleteTemplate(item.id)}
+        >
+          <Text style={styles.deleteButtonText}>×</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 
-  // Custom header that combines the screen title with the component header
+  // Custom header
   const renderHeader = () => (
     <View>
       {HeaderComponent && <HeaderComponent />}
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Workout Templates</Text>
+      <View style={styles.headerContainer}>
+        {deleteMode ? (
+          <TouchableOpacity
+            style={[styles.addButton, styles.doneButton]}
+            onPress={exitDeleteMode}
+          >
+            <Text style={[styles.addButtonText, styles.doneButtonText]}>Done</Text>
+          </TouchableOpacity>
+        ) : (
           <TouchableOpacity
             style={styles.addButton}
-            onPress={() => setIsModalVisible(true)}
+            onPress={handleAddTemplate}
           >
-            <Text style={styles.addButtonText}>+ Add Template</Text>
+            <Text style={styles.addButtonText}>+ New Workout</Text>
           </TouchableOpacity>
-        </View>
+        )}
       </View>
     </View>
   );
+
+  // Calculate number of columns based on screen width
+  const numColumns = width > 600 ? 3 : 2;
 
   return (
     <View style={styles.fullContainer}>
@@ -151,54 +265,79 @@ export default function WorkoutTemplates({
         keyExtractor={(item) => item.id}
         ListHeaderComponent={renderHeader}
         contentContainerStyle={[styles.listContent, contentContainerStyle]}
+        numColumns={numColumns}
+        key={numColumns} // Force re-render when numColumns changes
+        columnWrapperStyle={numColumns > 1 ? styles.row : null}
         ListEmptyComponent={
-          <View style={styles.container}>
+          <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>
-              No templates saved yet. Create your first template!
+              No workout notes yet.{'\n'}Tap "New Workout" to create your first one!
             </Text>
           </View>
         }
       />
 
-      {/* Add Template Modal */}
+      {/* Note Editor Modal */}
       <Modal
         visible={isModalVisible}
         animationType="slide"
-        presentationStyle="pageSheet"
+        presentationStyle="fullScreen"
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Add New Template</Text>
+        <View style={styles.noteEditorContainer}>
+          {/* Header with title input */}
+          <View style={styles.noteEditorHeader}>
             <TouchableOpacity
               style={styles.cancelButton}
-              onPress={() => setIsModalVisible(false)}
+              onPress={() => {
+                setIsModalVisible(false);
+                setEditingTemplate(null);
+                setTemplateName('');
+                setTemplateContent('');
+              }}
             >
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={saveTemplate}
+            >
+              <Text style={styles.saveButtonText}>Save</Text>
+            </TouchableOpacity>
           </View>
 
+          {/* Title Input */}
           <TextInput
-            style={styles.input}
-            placeholder="Template Name"
+            style={styles.titleInput}
+            placeholder="Workout Name"
             value={templateName}
             onChangeText={setTemplateName}
+            autoFocus={!editingTemplate}
+            placeholderTextColor="#999"
           />
 
-          <TextInput
-            style={[styles.input, styles.contentInput]}
-            placeholder="Workout Content (e.g., 30s pushups, 15s rest, 45s squats, 15s rest)"
-            value={templateContent}
-            onChangeText={setTemplateContent}
-            multiline
-            numberOfLines={6}
-          />
+          {/* Content Editor */}
+          <ScrollView style={styles.contentEditor} showsVerticalScrollIndicator={false}>
+            <TextInput
+              style={styles.contentTextInput}
+              placeholder="Write your workout here...
 
-          <TouchableOpacity
-            style={styles.saveButton}
-            onPress={addTemplate}
-          >
-            <Text style={styles.saveButtonText}>Save Template</Text>
-          </TouchableOpacity>
+For example:
+• 30s Push-ups
+• 15s Rest
+• 45s Squats
+• 15s Rest
+• 1min Plank
+• 30s Rest
+
+Or write it however you like!"
+              value={templateContent}
+              onChangeText={setTemplateContent}
+              multiline
+              textAlignVertical="top"
+              placeholderTextColor="#999"
+            />
+          </ScrollView>
         </View>
       </Modal>
     </View>
@@ -210,94 +349,167 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContent: {
-    flexGrow: 1,
+    paddingBottom: 20,
   },
-  container: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 12,
-    padding: 16,
-    marginVertical: 10,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: 'white',
+  headerContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
   },
   addButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   addButtonText: {
-    color: 'white',
+    color: '#667eea',
+    fontSize: 16,
     fontWeight: '600',
   },
-  templateItem: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    marginBottom: 8,
-    borderRadius: 8,
-    overflow: 'hidden',
-    marginHorizontal: 16,
+  doneButton: {
+    backgroundColor: 'rgba(255, 59, 48, 0.9)',
   },
-  templateContent: {
+  doneButtonText: {
+    color: 'white',
+  },
+  noteCardWiggle: {
+    // You can add animation here if desired
+    transform: [{ rotate: '0.5deg' }],
+  },
+  noteCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    marginHorizontal: 8,
+    marginBottom: 16,
+    borderRadius: 12,
+    minHeight: 200,
+    maxHeight: 250,
+    position: 'relative',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  row: {
+    justifyContent: 'space-between',
+  },
+  noteContent: {
     flex: 1,
     padding: 12,
   },
-  templateName: {
+  noteHeader: {
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.3)',
+    paddingBottom: 8,
+    marginBottom: 12,
+  },
+  noteTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
     color: 'white',
-    marginBottom: 4,
+    textAlign: 'center',
+    fontFamily: 'Courier New',
   },
-  templatePreview: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginBottom: 4,
+  notePreview: {
+    fontSize: 10,
+    color: 'rgba(255, 255, 255, 0.9)',
+    lineHeight: 18,
+    fontFamily: 'Verdana',
+    flex: 1,
   },
-  templateDate: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.6)',
+  noteFooter: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.2)',
   },
-  deleteButton: {
-    backgroundColor: 'rgba(255, 0, 0, 0.3)',
-    width: 40,
+  noteDate: {
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.7)',
+    textAlign: 'right',
+  },
+  editButton: {
+    position: 'absolute',
+    top: -10,
+    left: -10,
+    backgroundColor: 'rgba(0, 122, 255, 0.9)',
+    width: 30,
+    height: 30,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  editButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  deleteButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(255, 59, 48, 0.9)',
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
   },
   deleteButtonText: {
     color: 'white',
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: 'bold',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+    marginTop: 60,
   },
   emptyText: {
     textAlign: 'center',
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: 'rgba(255, 255, 255, 0.8)',
     fontSize: 16,
-    marginTop: 40,
+    lineHeight: 24,
   },
-  modalContainer: {
+  noteEditorContainer: {
     flex: 1,
-    backgroundColor: 'white',
-    padding: 20,
+    backgroundColor: '#f8f8f8',
   },
-  modalHeader: {
+  noteEditorHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    fontFamily: 'courier-new',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    paddingTop: 50, // Account for status bar
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
   },
   cancelButton: {
     padding: 8,
@@ -306,27 +518,39 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontSize: 16,
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-    fontSize: 16,
-  },
-  contentInput: {
-    height: 120,
-    textAlignVertical: 'top',
-  },
   saveButton: {
     backgroundColor: '#007AFF',
-    borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
   },
   saveButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  titleInput: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  contentEditor: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+  contentTextInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    textAlignVertical: 'top',
+    minHeight: 400,
+    lineHeight: 24,
   },
 });

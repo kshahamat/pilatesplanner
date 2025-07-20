@@ -1,7 +1,7 @@
 import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
 
 let beepSound = null;
-let beepVolume = 0.8; // Default beep volume
+let beepVolume = 1; // Default beep volume
 
 export async function initializeAudio() {
   try {
@@ -17,7 +17,7 @@ export async function initializeAudio() {
 
     // Load only the beep sound
     const { sound: beep } = await Audio.Sound.createAsync(
-      require('../assets/beeper.mp3'),
+      require('../assets/workoutbeep.mp4'),
       { shouldPlay: false, isLooping: false, volume: beepVolume }
     );
     beepSound = beep;
@@ -42,7 +42,7 @@ export function getBeepVolume() {
   return beepVolume;
 }
 
-export async function playBeep(frequency = 800, duration = 200) {
+export async function playBeep(frequency = 1000, duration = 200) {
   try {
     if (beepSound && beepVolume > 0) {
       await beepSound.setPositionAsync(0);

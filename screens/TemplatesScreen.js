@@ -1,15 +1,33 @@
 // screens/TemplatesScreen.js
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import WorkoutTemplates from '../components/WorkoutTemplates';
 import { useWorkout } from '../context/WorkoutContext';
 
-export default function TemplatesScreen() {
+export default function TemplatesScreen({ navigation }) {
   const { handleSelectTemplate, currentWorkoutInput } = useWorkout();
 
+  const navigateToManual = () => {
+    navigation.navigate('Manual');
+  };
+
   const HeaderComponent = () => (
-    <Text style={styles.title}>Templates</Text>
+    <>
+      {/* Navigation Buttons */}
+      <View style={styles.navigationContainer}>
+        <TouchableOpacity 
+          style={styles.navButton}
+          onPress={navigateToManual}
+        >
+          <Text style={styles.navButtonText}>Manual</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.navButton, styles.activeButton]}>
+          <Text style={[styles.navButtonText, styles.activeButtonText]}>Templates</Text>
+        </TouchableOpacity>
+      </View>
+      
+    </>
   );
 
   return (
@@ -22,6 +40,7 @@ export default function TemplatesScreen() {
         currentWorkoutInput={currentWorkoutInput}
         HeaderComponent={HeaderComponent}
         contentContainerStyle={styles.scrollContent}
+        navigation={navigation}
       />
     </LinearGradient>
   );
@@ -34,6 +53,31 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingVertical: 20,
+  },
+  navigationContainer: {
+    flexDirection: 'row',
+    marginBottom: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 25,
+    padding: 4,
+  },
+  navButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    alignItems: 'center',
+  },
+  activeButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+  },
+  navButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  activeButtonText: {
+    color: '#667eea',
   },
   title: {
     fontSize: 32,

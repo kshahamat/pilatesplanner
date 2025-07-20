@@ -1,8 +1,8 @@
 import React, { useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { formatTime } from '../utils/timeUtils';
 
-export default function WorkoutProgress({ workoutData, currentExerciseIndex }) {
+export default function WorkoutProgress({ workoutData, currentExerciseIndex, onReset }) {
   const scrollViewRef = useRef(null);
   const EXERCISE_HEIGHT = 76; // Approximate height of each exercise item + margin
 
@@ -23,49 +23,63 @@ export default function WorkoutProgress({ workoutData, currentExerciseIndex }) {
   if (!workoutData.length) return null;
 
   return (
-    <ScrollView 
-      ref={scrollViewRef}
-      style={styles.container} 
-      showsVerticalScrollIndicator={false}
-    >
-      {workoutData.map((exercise, index) => {
-        const isActive = index === currentExerciseIndex;
-        const isCompleted = index < currentExerciseIndex;
-        
-        return (
-          <View
-            key={index}
-            style={[
-              styles.exerciseItem,
-              isActive && styles.activeItem,
-              isCompleted && styles.completedItem,
-            ]}
-          >
-            <View style={styles.exerciseNumber}>
-              <Text style={styles.numberText}>{index + 1}</Text>
+    <View style={styles.container}>
+      <ScrollView 
+        ref={scrollViewRef}
+        style={styles.scrollContainer} 
+        showsVerticalScrollIndicator={false}
+      >
+        {workoutData.map((exercise, index) => {
+          const isActive = index === currentExerciseIndex;
+          const isCompleted = index < currentExerciseIndex;
+          
+          return (
+            <View
+              key={index}
+              style={[
+                styles.exerciseItem,
+                isActive && styles.activeItem,
+                isCompleted && styles.completedItem,
+              ]}
+            >
+              <View style={styles.exerciseNumber}>
+                <Text style={styles.numberText}>{index + 1}</Text>
+              </View>
+              
+              <View style={styles.exerciseInfo}>
+                <Text style={styles.exerciseName}>{exercise.name}</Text>
+                <Text style={styles.exerciseDuration}>
+                  {formatTime(exercise.duration)}
+                </Text>
+              </View>
+              
+              <View style={[
+                styles.statusIndicator,
+                isActive && styles.activeIndicator,
+                isCompleted && styles.completedIndicator,
+              ]} />
             </View>
-            
-            <View style={styles.exerciseInfo}>
-              <Text style={styles.exerciseName}>{exercise.name}</Text>
-              <Text style={styles.exerciseDuration}>
-                {formatTime(exercise.duration)}
-              </Text>
-            </View>
-            
-            <View style={[
-              styles.statusIndicator,
-              isActive && styles.activeIndicator,
-              isCompleted && styles.completedIndicator,
-            ]} />
-          </View>
-        );
-      })}
-    </ScrollView>
+          );
+        })}
+      </ScrollView>
+      
+      {/* Reset button at the bottom */}
+      <TouchableOpacity
+        style={[styles.resetButton, !workoutData.length && styles.buttonDisabled]}
+        onPress={onReset}
+        disabled={!workoutData.length}
+      >
+        <Text style={styles.resetButtonText}>Reset Workout</Text>
+      </TouchableOpacity>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  scrollContainer: {
     maxHeight: 300,
   },
   exerciseItem: {
@@ -122,5 +136,22 @@ const styles = StyleSheet.create({
   },
   completedIndicator: {
     backgroundColor: '#45b7aa',
+  },
+  resetButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingVertical: 15,
+    borderRadius: 25,
+    marginTop: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  resetButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center',
   },
 });

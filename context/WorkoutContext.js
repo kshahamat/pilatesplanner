@@ -91,6 +91,49 @@ export const WorkoutProvider = ({ children }) => {
     }
   };
 
+  // New function to go to previous exercise
+  const previousExercise = async () => {
+    if (currentExerciseIndex > 0 && isRunning) {
+      // Clear the current timer
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      
+      // Play beep sound
+      if (audioInitialized) {
+        await playBeep(800, 300);
+      }
+      
+      // Go to previous exercise
+      const prevIndex = currentExerciseIndex - 1;
+      setCurrentExerciseIndex(prevIndex);
+      startCurrentExercise(prevIndex);
+    }
+  };
+
+  // Function to restart the current exercise
+  const restartCurrentExercise = async () => {
+    const currentExercise = workoutData[currentExerciseIndex];
+    if (!currentExercise || !isRunning) return;
+    
+    // Clear the current timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    
+    // Play beep sound
+    if (audioInitialized) {
+      await playBeep(1000, 300);
+    }
+    
+    // Reset the timer to the full duration
+    setCurrentTime(currentExercise.duration);
+    setTotalTime(currentExercise.duration);
+    
+    // Restart the timer
+    runTimer();
+  };
+
   const resetWorkout = () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -146,19 +189,19 @@ export const WorkoutProvider = ({ children }) => {
   };
 
   const finishWorkout = async () => {
-  setIsRunning(false);
-  setIsPaused(false);
-  setCurrentExerciseIndex(workoutData.length); // Add this line
-  if (timerRef.current) {
-    clearInterval(timerRef.current);
-  }
-  
-  if (audioInitialized) {
-    await playBeep(1000, 200);
-    setTimeout(() => playBeep(1000, 200), 300);
-    setTimeout(() => playBeep(1200, 400), 600);
-  }
-};
+    setIsRunning(false);
+    setIsPaused(false);
+    setCurrentExerciseIndex(workoutData.length); // Add this line
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    
+    if (audioInitialized) {
+      await playBeep(1000, 200);
+      setTimeout(() => playBeep(1000, 200), 300);
+      setTimeout(() => playBeep(1200, 400), 600);
+    }
+  };
 
   const value = {
     workoutData,
@@ -175,6 +218,8 @@ export const WorkoutProvider = ({ children }) => {
     pauseWorkout,
     skipExercise,
     resetWorkout,
+    restartCurrentExercise,
+    previousExercise, // Add this new function
   };
 
   return (

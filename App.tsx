@@ -14,6 +14,37 @@ import CalendarScreen from './screens/CalendarScreen';
 
 const Tab = createBottomTabNavigator();
 
+// Combined Workout Screen with toggle functionality
+function WorkoutScreen({ navigation }) {  // Accept the real navigation prop from tab navigator
+  const [activeScreen, setActiveScreen] = React.useState('Manual');
+
+  const enhancedNavigation = {
+    navigate: (screenName) => {
+      if (screenName === 'Timer') {
+        // Use the real tab navigation to switch to Timer tab
+        navigation.navigate('Timer');
+      } else {
+        // Handle internal screen switching within Workout tab
+        setActiveScreen(screenName);
+      }
+    },
+    jumpTo: (screenName) => {
+      if (screenName === 'Timer') {
+        // Use jumpTo for tab navigation
+        navigation.jumpTo('Timer');
+      } else {
+        setActiveScreen(screenName);
+      }
+    }
+  };
+
+  if (activeScreen === 'Templates') {
+    return <TemplatesScreen navigation={enhancedNavigation} />;
+  }
+  
+  return <ManualWorkoutScreen navigation={enhancedNavigation} />;
+}
+
 export default function App() {
   React.useEffect(() => {
     activateKeepAwakeAsync();
@@ -25,7 +56,7 @@ export default function App() {
         <NavigationContainer>
           <Tab.Navigator
             screenOptions={{
-              tabBarActiveTintColor: '#FF6B35',
+              tabBarActiveTintColor: '#5541edff',
               tabBarInactiveTintColor: 'gray',
               headerShown: false,
               tabBarStyle: {
@@ -52,8 +83,8 @@ export default function App() {
               }}
             />
             <Tab.Screen
-              name="Manual"
-              component={ManualWorkoutScreen}
+              name="Workout"
+              component={WorkoutScreen}
               options={{
                 tabBarIcon: ({ color, size }) => (
                   <MaterialIcons name="fitness-center" color={color} size={size} />
@@ -66,15 +97,6 @@ export default function App() {
               options={{
                 tabBarIcon: ({ color, size }) => (
                   <MaterialIcons name="timer" color={color} size={size} />
-                ),
-              }}
-            />
-            <Tab.Screen
-              name="Templates"
-              component={TemplatesScreen}
-              options={{
-                tabBarIcon: ({ color, size }) => (
-                  <MaterialIcons name="list" color={color} size={size} />
                 ),
               }}
             />
