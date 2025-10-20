@@ -14,6 +14,7 @@ Poor Audio Integration - Timers often conflict with music apps or require manual
 Engagement Issues - Lack of visual feedback and celebration reduces motivation
 
 Solution Overview
+
 This application delivers a comprehensive workout management system that:
 
 Automates interval timing with precision countdown and audio alerts
