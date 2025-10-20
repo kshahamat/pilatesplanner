@@ -125,7 +125,7 @@ This application delivers a comprehensive workout management system that:
 
 ---
 
-## Features ✨
+## Features 
 
 ### Core Functionality
 
