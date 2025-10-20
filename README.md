@@ -3,13 +3,15 @@ Workout Timer App 🏋️‍♂️⏱️
 Executive Summary
 The Workout Timer App is a mobile-first interval training application designed to address the common pain points of home and gym-based workout routines. Built with React Native and Expo, this application transforms the workout experience by providing precise timing, audio cues, and intuitive workout management—eliminating the need for constant phone interaction during exercise sessions.
 Business Problem
+
 Modern fitness enthusiasts face several challenges during interval training workouts:
 
-Timing Inconsistency: Manual timekeeping leads to inconsistent rest and work intervals
-Workflow Disruption: Constantly checking phones for time interrupts exercise flow and form
-Limited Flexibility: Most timer apps lack real-time workout modification capabilities
-Poor Audio Integration: Timers often conflict with music apps or require manual audio management
-Engagement Issues: Lack of visual feedback and celebration reduces motivation
+Timing Inconsistency - Manual timekeeping leads to inconsistent rest and work intervals
+Workflow Disruption - Constantly checking phones for time interrupts exercise flow and form
+
+Limited Flexibility - Most timer apps lack real-time workout modification capabilities
+Poor Audio Integration - Timers often conflict with music apps or require manual audio management
+Engagement Issues - Lack of visual feedback and celebration reduces motivation
 
 Solution Overview
 This application delivers a comprehensive workout management system that:
