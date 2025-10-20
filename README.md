@@ -1,4 +1,5 @@
 Workout Timer App 🏋️‍♂️⏱️
+//
 Executive Summary
 The Workout Timer App is a mobile-first interval training application designed to address the common pain points of home and gym-based workout routines. Built with React Native and Expo, this application transforms the workout experience by providing precise timing, audio cues, and intuitive workout management—eliminating the need for constant phone interaction during exercise sessions.
 Business Problem
