@@ -1,4 +1,4 @@
-# Workout Timer App 🏋️‍♂️⏱️
+# Workout Timer App 
 
 ## Executive Summary
 
@@ -168,7 +168,7 @@ This application delivers a comprehensive workout management system that:
 
 ---
 
-## Tech Stack 🛠️
+## Tech Stack 
 
 - **Framework:** React Native with Expo  
 - **State Management:** React Context API  
@@ -179,7 +179,7 @@ This application delivers a comprehensive workout management system that:
 
 ---
 
-## Installation 📦
+## Installation 
 
 ### Prerequisites
 
